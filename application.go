@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/Albert221/UnbottledApi/domain"
+	"github.com/Albert221/UnbottledApi/entity"
 	"github.com/gorilla/mux"
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/mysql"
@@ -14,7 +14,7 @@ type application struct {
 }
 
 func newApplication(dbDsn string) (*application, error) {
-	db, err := gorm.Open("mysql", dbDsn)
+	db, err := gorm.Open("mysql", dbDsn+"?parseTime=true")
 	if err != nil {
 		return nil, err
 	}
@@ -25,7 +25,7 @@ func newApplication(dbDsn string) (*application, error) {
 }
 
 func (a *application) Migrate() {
-	a.db.AutoMigrate(domain.User{})
+	a.db.AutoMigrate(entity.User{}, entity.Point{})
 }
 
 func (a *application) Serve() error {
