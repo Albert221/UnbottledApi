@@ -78,6 +78,13 @@ func TestAuthController_AuthenticateHandler(t *testing.T) {
 				assert.JSONEq(t, `{"error": "Request body must be a valid json"}`, r.Body.String())
 			},
 		},
+		{
+			Name: "correctly fails when body isn't a valid schema",
+			Body: `{"some_field": "yes"}`,
+			Check: func(t *testing.T, r *httptest.ResponseRecorder) {
+				assert.Equal(t, http.StatusBadRequest, r.Code)
+			},
+		},
 	}
 
 	for _, aCase := range cases {
