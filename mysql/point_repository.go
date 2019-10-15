@@ -15,11 +15,20 @@ func NewPointRepository(db *gorm.DB) *PointRepository {
 	return &PointRepository{db: db}
 }
 
+func (PointRepository) result(point *entity.Point) *entity.Point {
+	empty := entity.Point{}
+	if empty == *point {
+		return nil
+	}
+
+	return point
+}
+
 func (p *PointRepository) ById(id uuid.UUID) *entity.Point {
 	point := new(entity.Point)
 	p.db.First(point, "id = ?", id.String())
 
-	return point
+	return p.result(point)
 }
 
 func (p *PointRepository) InArea(lat, lng, radius float32) ([]*entity.Point, error) {

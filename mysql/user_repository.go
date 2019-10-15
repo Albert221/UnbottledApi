@@ -14,16 +14,25 @@ func NewUserRepository(db *gorm.DB) *UserRepository {
 	return &UserRepository{db: db}
 }
 
+func (UserRepository) result(user *entity.User) *entity.User {
+	empty := entity.User{}
+	if empty == *user {
+		return nil
+	}
+
+	return user
+}
+
 func (u *UserRepository) ById(id uuid.UUID) *entity.User {
 	user := new(entity.User)
 	u.db.First(&user, "id = ?", id.String())
 
-	return user
+	return u.result(user)
 }
 
 func (u *UserRepository) ByUsernameOrEmail(value string) *entity.User {
 	user := new(entity.User)
 	u.db.First(user, "username = ? OR email = ?", value, value)
 
-	return user
+	return u.result(user)
 }

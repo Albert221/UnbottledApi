@@ -59,7 +59,7 @@ func TestUserRepository_ById(t *testing.T) {
 
 	t.Run("returns correctly nothing", func(t *testing.T) {
 		user := repo.ById(uuid.MustParse("f923f3e3-94c0-43c3-83e2-f9a772e16f23"))
-		assert.Zero(t, *user)
+		assert.Nil(t, user)
 	})
 }
 
@@ -84,6 +84,6 @@ func TestUserRepository_ByUsernameOrEmail(t *testing.T) {
 
 	t.Run("returns correctly nothing", func(t *testing.T) {
 		user := repo.ByUsernameOrEmail("invalid-value")
-		assert.Zero(t, *user)
+		assert.Nil(t, user)
 	})
 }

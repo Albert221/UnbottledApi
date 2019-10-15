@@ -62,7 +62,7 @@ func TestPointRepository_ById(t *testing.T) {
 	t.Run("returns correctly nothing", func(t *testing.T) {
 		point := repo.ById(uuid.MustParse("28c80525-2617-4e2c-9aba-a7e1caff1347")) // random uuid
 
-		assert.Zero(t, *point)
+		assert.Nil(t, point)
 	})
 }
 
