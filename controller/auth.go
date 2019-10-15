@@ -1,19 +1,32 @@
 package controller
 
 import (
+	"context"
 	"encoding/json"
+	"github.com/Albert221/UnbottledApi/entity"
 	"github.com/Albert221/UnbottledApi/repository"
 	valid "github.com/asaskevich/govalidator"
+	"github.com/gbrlsnchs/jwt/v3"
+	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
+	"log"
 	"net/http"
+	"strings"
+	"time"
 )
 
 type AuthController struct {
-	users repository.UserRepository
+	users   repository.UserRepository
+	jwtAlgo jwt.Algorithm
 }
 
-func NewAuthController(users repository.UserRepository) *AuthController {
-	return &AuthController{users: users}
+func NewAuthController(users repository.UserRepository, jwtAlgo jwt.Algorithm) *AuthController {
+	return &AuthController{users: users, jwtAlgo: jwtAlgo}
+}
+
+type jwtPayload struct {
+	jwt.Payload
+	UserID uuid.UUID `json:"user_id,omitempty"`
 }
 
 func (a *AuthController) AuthenticateHandler(w http.ResponseWriter, r *http.Request) {
@@ -41,7 +54,71 @@ func (a *AuthController) AuthenticateHandler(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	_ = json.NewEncoder(w).Encode(map[string]string{"message": "Authenticated successfully"})
+	payload := jwtPayload{
+		UserID: user.ID,
+		Payload: jwt.Payload{
+			ExpirationTime: jwt.NumericDate(time.Now().Add(2 * time.Hour)),
+			IssuedAt:       jwt.NumericDate(time.Now()),
+		},
+	}
 
-	// todo: create and return jwt token
+	// todo: return refresh token too
+	accessToken, err := jwt.Sign(payload, a.jwtAlgo)
+	if err != nil {
+		log.Print(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	_ = json.NewEncoder(w).Encode(map[string]string{"access_token": string(accessToken)})
+}
+
+type userContextKey struct{}
+
+func (a *AuthController) AuthenticationMiddleware(h http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		authHeader := r.Header.Get("Authorization")
+
+		if authHeader == "" {
+			h.ServeHTTP(w, r)
+			return
+		}
+
+		parts := strings.Split(authHeader, " ")
+		if len(parts) < 2 || strings.ToLower(parts[0]) != "bearer" {
+			w.WriteHeader(http.StatusUnauthorized)
+			_ = json.NewEncoder(w).Encode(map[string]string{"error": "Authorization header is invalid"})
+			return
+		}
+
+		jwtToken := parts[1]
+
+		var payload jwtPayload
+		payloadValidator := jwt.ValidatePayload(&payload.Payload, jwt.ExpirationTimeValidator(time.Now()))
+		_, err := jwt.Verify([]byte(jwtToken), a.jwtAlgo, &payload, payloadValidator)
+		if err != nil {
+			w.WriteHeader(http.StatusUnauthorized)
+			_ = json.NewEncoder(w).Encode(map[string]string{"error": "Given token is invalid or expired"})
+			return
+		}
+
+		user := a.users.ById(payload.UserID)
+		if user == nil {
+			w.WriteHeader(http.StatusUnauthorized)
+			_ = json.NewEncoder(w).Encode(map[string]string{"error": "User for given token does not exist"})
+			return
+		}
+
+		ctx := context.WithValue(r.Context(), userContextKey{}, user)
+		h.ServeHTTP(w, r.WithContext(ctx))
+	})
+}
+
+func getUser(r *http.Request) *entity.User {
+	user := r.Context().Value(userContextKey{})
+	if user == nil {
+		return nil
+	}
+
+	return user.(*entity.User)
 }
