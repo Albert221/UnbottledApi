@@ -91,14 +91,14 @@ func TestPointRepository_InArea(t *testing.T) {
 	})
 
 	t.Run("returns nothing", func(t *testing.T) {
-		points, err := repo.InArea(0, 0, 10)
+		points, err := repo.InArea(0, 0, 10) // (0, 0) is faaaaaar from Gdansk and Warsaw
 
 		assert.NoError(t, err)
 		assert.Len(t, points, 0)
 	})
 
 	t.Run("returns error on negative radius", func(t *testing.T) {
-		_, err := repo.InArea(0, 0, -15) // (0, 0) is faaaaaar from Gdansk and Warsaw
+		_, err := repo.InArea(0, 0, -15)
 
 		assert.Error(t, err, repository.RadiusNegativeOrZeroErr.Error())
 	})
