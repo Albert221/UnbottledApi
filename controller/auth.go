@@ -3,7 +3,6 @@ package controller
 import (
 	"context"
 	"encoding/json"
-	"github.com/Albert221/UnbottledApi/entity"
 	"github.com/Albert221/UnbottledApi/repository"
 	valid "github.com/asaskevich/govalidator"
 	"github.com/gbrlsnchs/jwt/v3"
@@ -62,7 +61,7 @@ func (a *AuthController) AuthenticateHandler(w http.ResponseWriter, r *http.Requ
 		},
 	}
 
-	// todo: return refresh token too
+	// todo(Albert221): return refresh token too
 	accessToken, err := jwt.Sign(payload, a.jwtAlgo)
 	if err != nil {
 		log.Print(err)
@@ -112,13 +111,4 @@ func (a *AuthController) AuthenticationMiddleware(h http.Handler) http.Handler {
 		ctx := context.WithValue(r.Context(), userContextKey{}, user)
 		h.ServeHTTP(w, r.WithContext(ctx))
 	})
-}
-
-func getUser(r *http.Request) *entity.User {
-	user := r.Context().Value(userContextKey{})
-	if user == nil {
-		return nil
-	}
-
-	return user.(*entity.User)
 }

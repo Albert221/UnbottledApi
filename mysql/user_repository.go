@@ -36,3 +36,7 @@ func (u *UserRepository) ByUsernameOrEmail(value string) *entity.User {
 
 	return u.result(user)
 }
+
+func (u *UserRepository) Save(user *entity.User) error {
+	return u.db.Save(user).Error
+}

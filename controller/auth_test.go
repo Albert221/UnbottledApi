@@ -1,12 +1,11 @@
 package controller
 
 import (
-	"context"
 	"github.com/Albert221/UnbottledApi/entity"
+	rmock "github.com/Albert221/UnbottledApi/repository/mock"
 	"github.com/gbrlsnchs/jwt/v3"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/mock"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -14,17 +13,8 @@ import (
 	"testing"
 )
 
-var (
-	johnDoe = &entity.User{
-		Base:     entity.Base{ID: uuid.MustParse("bd65f5b2-8563-40c8-8ce6-4d19164fb045")},
-		Username: "john.doe",
-		Email:    "john.doe@example.com",
-		Password: "$2y$12$rf22cbpj6wHhNJf476Wwkee04UrNSv4ZqjwveBChu/cRo1GQkg1s.",
-	}
-)
-
 func TestAuthController_AuthenticateHandler(t *testing.T) {
-	userRepoMock := new(userRepositoryMock)
+	userRepoMock := new(rmock.UserRepositoryMock)
 	userRepoMock.On("ByUsernameOrEmail", "john.doe").Return(johnDoe)
 	userRepoMock.On("ByUsernameOrEmail", "john.doe@example.com").Return(johnDoe)
 	userRepoMock.On("ByUsernameOrEmail", "idontexist").Return(nil)
@@ -110,7 +100,7 @@ func TestAuthController_AuthenticationMiddleware(t *testing.T) {
 		}
 	})
 
-	userRepoMock := new(userRepositoryMock)
+	userRepoMock := new(rmock.UserRepositoryMock)
 	userRepoMock.On("ById", uuid.MustParse("5eb2dd69-a43c-416f-a8ca-90eeb15c12e7")).
 		Return(nil)
 	userRepoMock.On("ById", johnDoe.ID).Return(johnDoe)
@@ -196,46 +186,4 @@ func TestAuthController_AuthenticationMiddleware(t *testing.T) {
 			test.Check(t, rr)
 		})
 	}
-}
-
-func TestAuthController_getUser(t *testing.T) {
-	t.Run("returns nil when no user in context", func(t *testing.T) {
-		t.Parallel()
-
-		r := httptest.NewRequest("GET", "/", nil)
-		user := getUser(r)
-
-		assert.Nil(t, user)
-	})
-
-	t.Run("returns user when it is present in context", func(t *testing.T) {
-		t.Parallel()
-
-		r := httptest.NewRequest("GET", "/", nil)
-		r = r.WithContext(context.WithValue(r.Context(), userContextKey{}, johnDoe))
-
-		user := getUser(r)
-
-		assert.Equal(t, johnDoe, user)
-	})
-}
-
-type userRepositoryMock struct {
-	mock.Mock
-}
-
-func (m *userRepositoryMock) ById(id uuid.UUID) *entity.User {
-	args := m.Called(id)
-	if args.Get(0) == nil {
-		return nil
-	}
-	return args.Get(0).(*entity.User)
-}
-
-func (m *userRepositoryMock) ByUsernameOrEmail(value string) *entity.User {
-	args := m.Called(value)
-	if args.Get(0) == nil {
-		return nil
-	}
-	return args.Get(0).(*entity.User)
 }
