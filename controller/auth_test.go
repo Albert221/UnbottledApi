@@ -103,6 +103,11 @@ func TestAuthController_AuthenticationMiddleware(t *testing.T) {
 	userRepoMock := new(rmock.UserRepositoryMock)
 	userRepoMock.On("ById", uuid.MustParse("5eb2dd69-a43c-416f-a8ca-90eeb15c12e7")).
 		Return(nil)
+	johnNotActive := *johnDoe
+	johnNotActive.ID = uuid.MustParse("b2937baf-18dd-479e-b479-8fbfc855606f")
+	johnNotActive.Active = false
+	userRepoMock.On("ById", uuid.MustParse("b2937baf-18dd-479e-b479-8fbfc855606f")).
+		Return(&johnNotActive)
 	userRepoMock.On("ById", johnDoe.ID).Return(johnDoe)
 
 	contr := NewAuthController(userRepoMock, jwt.None())
@@ -155,6 +160,16 @@ func TestAuthController_AuthenticationMiddleware(t *testing.T) {
 			Check: func(t *testing.T, rr *httptest.ResponseRecorder) {
 				assert.Equal(t, http.StatusUnauthorized, rr.Code)
 				assert.JSONEq(t, `{"error": "User for given token does not exist"}`, rr.Body.String())
+			},
+		},
+		{
+			Name: "returns error when token user is not active",
+			// token with user_id: 5eb2dd69-a43c-416f-a8ca-90eeb15c12e7
+			AuthHeader: "Bearer ew0KICAiYWxnIjogIm5vbmUiLA0KICAidHlwIjogIkpXVCINCn0.eyJpYXQiOjE1MTYyMzkwMj" +
+				"IsImV4cCI6NDEwMjQ0ODQ2MSwidXNlcl9pZCI6ImIyOTM3YmFmLTE4ZGQtNDc5ZS1iNDc5LThmYmZjODU1NjA2ZiJ9.",
+			Check: func(t *testing.T, rr *httptest.ResponseRecorder) {
+				assert.Equal(t, http.StatusUnauthorized, rr.Code)
+				assert.JSONEq(t, `{"error": "User is not active"}`, rr.Body.String())
 			},
 		},
 		{
