@@ -22,6 +22,4 @@ func TestUserController_CreateHandler(t *testing.T) {
 	contr.CreateHandler(rr, r)
 
 	assert.NotEmpty(t, rr.Body.String())
-
-	t.Log(rr.Body.String())
 }

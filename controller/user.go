@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"github.com/Albert221/UnbottledApi/entity"
 	"github.com/Albert221/UnbottledApi/repository"
-	"github.com/jinzhu/gorm"
 	"golang.org/x/crypto/bcrypt"
 	"log"
 	"net/http"
