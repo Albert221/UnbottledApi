@@ -7,6 +7,7 @@ import (
 	"golang.org/x/crypto/bcrypt"
 	"log"
 	"net/http"
+	"strings"
 )
 
 type UserController struct {
@@ -47,8 +48,15 @@ func (u *UserController) CreateHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := u.users.Save(user); err != nil {
-		// todo(Albert221): check for unique constraint fail
-		//if err.
+		if strings.Contains(err.Error(), "Duplicate entry") {
+			w.WriteHeader(http.StatusBadRequest)
+			if strings.Contains(err.Error(), "_username") {
+				_ = json.NewEncoder(w).Encode(map[string]string{"error": "That username is already taken"})
+			} else { // email
+				_ = json.NewEncoder(w).Encode(map[string]string{"error": "That email is already taken"})
+			}
+			return
+		}
 
 		log.Println(err)
 		w.WriteHeader(http.StatusInternalServerError)
