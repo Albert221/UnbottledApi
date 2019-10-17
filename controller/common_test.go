@@ -15,6 +15,7 @@ var (
 		Username: "john.doe",
 		Email:    "john.doe@example.com",
 		Password: "$2y$12$rf22cbpj6wHhNJf476Wwkee04UrNSv4ZqjwveBChu/cRo1GQkg1s.",
+		Active:   true,
 	}
 )
 

@@ -8,6 +8,8 @@ import (
 	"net/http"
 )
 
+type userContextKey struct{}
+
 func getUser(r *http.Request) *entity.User {
 	user := r.Context().Value(userContextKey{})
 	if user == nil {

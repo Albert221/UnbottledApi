@@ -53,6 +53,12 @@ func (a *AuthController) AuthenticateHandler(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
+	if !user.Active {
+		w.WriteHeader(http.StatusBadRequest)
+		_ = json.NewEncoder(w).Encode(map[string]string{"error": "User is not active"})
+		return
+	}
+
 	payload := jwtPayload{
 		UserID: user.ID,
 		Payload: jwt.Payload{
@@ -71,8 +77,6 @@ func (a *AuthController) AuthenticateHandler(w http.ResponseWriter, r *http.Requ
 
 	_ = json.NewEncoder(w).Encode(map[string]string{"access_token": string(accessToken)})
 }
-
-type userContextKey struct{}
 
 func (a *AuthController) AuthenticationMiddleware(h http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -105,6 +109,12 @@ func (a *AuthController) AuthenticationMiddleware(h http.Handler) http.Handler {
 		if user == nil {
 			w.WriteHeader(http.StatusUnauthorized)
 			_ = json.NewEncoder(w).Encode(map[string]string{"error": "User for given token does not exist"})
+			return
+		}
+
+		if !user.Active {
+			w.WriteHeader(http.StatusUnauthorized)
+			_ = json.NewEncoder(w).Encode(map[string]string{"error": "User is not active"})
 			return
 		}
 

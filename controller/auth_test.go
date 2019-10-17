@@ -170,7 +170,7 @@ func TestAuthController_AuthenticationMiddleware(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		test := test
+		test := test // capture range variable
 		t.Run(test.Name, func(t *testing.T) {
 			t.Parallel()
 

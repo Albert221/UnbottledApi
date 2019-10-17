@@ -43,6 +43,7 @@ func (u *UserController) CreateHandler(w http.ResponseWriter, r *http.Request) {
 		Username: body.Username,
 		Email:    body.Email,
 		Password: string(password),
+		Active:   true,
 	}
 
 	if err := u.users.Save(user); err != nil {
