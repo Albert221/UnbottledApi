@@ -75,7 +75,10 @@ func (a *AuthController) AuthenticateHandler(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	_ = json.NewEncoder(w).Encode(map[string]string{"access_token": string(accessToken)})
+	_ = json.NewEncoder(w).Encode(map[string]interface{}{
+		"access_token": string(accessToken),
+		"user": user,
+	})
 }
 
 func (a *AuthController) AuthenticationMiddleware(h http.Handler) http.Handler {
