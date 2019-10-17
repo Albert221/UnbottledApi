@@ -8,5 +8,6 @@ type Point struct {
 	Author    User      `json:"-" gorm:"foreignkey:AuthorID"`
 	Latitude  float32   `json:"latitude" gorm:"not null"`
 	Longitude float32   `json:"longitude" gorm:"not null"`
-	PhotoUrl  string    `json:"photo_url"`
+	PhotoID   uuid.UUID `json:"photo_id" gorm:"char(36)"`
+	Photo     Photo     `json:"photo" gorm:"foreignkey:PhotoID"`
 }

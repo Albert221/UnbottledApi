@@ -13,4 +13,5 @@ var (
 type PointRepository interface {
 	ById(id uuid.UUID) *entity.Point
 	InArea(lat, lng, radius float32) ([]*entity.Point, error)
+	Save(point *entity.Point) error
 }

@@ -54,5 +54,6 @@ func (u *UserController) CreateHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	w.WriteHeader(http.StatusCreated)
 	_ = json.NewEncoder(w).Encode(map[string]interface{}{"user": user})
 }

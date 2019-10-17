@@ -26,7 +26,7 @@ func (PointRepository) result(point *entity.Point) *entity.Point {
 
 func (p *PointRepository) ById(id uuid.UUID) *entity.Point {
 	point := new(entity.Point)
-	p.db.First(point, "id = ?", id.String())
+	p.db.Preload("Photo").First(point, "id = ?", id.String())
 
 	return p.result(point)
 }
@@ -39,10 +39,15 @@ func (p *PointRepository) InArea(lat, lng, radius float32) ([]*entity.Point, err
 	var points []*entity.Point
 	// Haversine Formula: https://stackoverflow.com/a/29555137/3158312
 	p.db.
+		Preload("Photo").
 		Where("6371 * 2 * ASIN(SQRT(POWER(SIN((? - ABS(`latitude`)) * PI() / 180 / 2), 2) "+
 			"+ COS(? * PI() / 180 ) * COS(ABS(`latitude`) * PI() / 180) "+
 			"* POWER(SIN((? - (`longitude`)) * PI() / 180 / 2), 2))) <= ?", lat, lat, lng, radius).
 		Find(&points)
 
 	return points, nil
+}
+
+func (p *PointRepository) Save(point *entity.Point) error {
+	return p.db.Save(point).Error
 }
