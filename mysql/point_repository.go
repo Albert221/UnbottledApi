@@ -40,16 +40,19 @@ func (p *PointRepository) InArea(lat, lng, radius float32) ([]*entity.Point, err
 	// Haversine Formula: https://stackoverflow.com/a/29555137/3158312
 	p.db.
 		Preload("Photo").
-		Where("6371 * 2 * ASIN(SQRT(POWER(SIN((? - ABS(`latitude`)) * PI() / 180 / 2), 2) "+
-			"+ COS(? * PI() / 180 ) * COS(ABS(`latitude`) * PI() / 180) "+
-			"* POWER(SIN((? - (`longitude`)) * PI() / 180 / 2), 2))) <= ?", lat, lat, lng, radius).
+		Where("6371 * 2 * ASIN(SQRT(POWER(SIN((? - ABS(latitude)) * PI() / 180 / 2), 2) "+
+			"+ COS(? * PI() / 180 ) * COS(ABS(latitude) * PI() / 180) "+
+			"* POWER(SIN((? - (longitude)) * PI() / 180 / 2), 2))) <= ?", lat, lat, lng, radius).
 		Find(&points)
 
 	return points, nil
 }
 
 func (p *PointRepository) ByAuthorID(authorID uuid.UUID) []*entity.Point {
-	return nil
+	var points []*entity.Point
+	p.db.Preload("Photo").Where("author_id = ?", authorID.String()).Find(&points)
+
+	return points
 }
 
 func (p *PointRepository) Save(point *entity.Point) error {

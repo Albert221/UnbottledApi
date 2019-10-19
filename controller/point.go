@@ -70,6 +70,18 @@ func (PointController) parseLatLngRadiusVars(r *http.Request) (float32, float32,
 	return float32(lat), float32(lng), float32(radius), errors
 }
 
+func (p *PointController) GetMyPoints(w http.ResponseWriter, r *http.Request) {
+	user := getUser(r)
+	if user == nil {
+		w.WriteHeader(http.StatusForbidden)
+		return
+	}
+
+	points := p.points.ByAuthorID(user.ID)
+
+	_ = json.NewEncoder(w).Encode(map[string]interface{}{"points": points})
+}
+
 func (p *PointController) UploadPhoto(w http.ResponseWriter, r *http.Request) {
 	user := getUser(r)
 	if user == nil {
