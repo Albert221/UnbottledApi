@@ -8,7 +8,7 @@ import (
 
 type Base struct {
 	ID        uuid.UUID `json:"id" gorm:"type:char(36);primary_key"`
-	CreatedAt time.Time `json:"created_at"`
+	CreatedAt time.Time `json:"created_at" gorm:"not null"`
 }
 
 func (b *Base) BeforeCreate(scope *gorm.Scope) error {
