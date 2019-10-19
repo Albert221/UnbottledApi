@@ -154,7 +154,7 @@ func (p *PointController) AddHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	photo := p.photos.ById(photoId)
+	photo := p.photos.ByID(photoId)
 	if photo == nil {
 		w.WriteHeader(http.StatusBadRequest)
 		_ = json.NewEncoder(w).Encode(map[string]string{"error": "Photo with given ID does not exist"})

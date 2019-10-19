@@ -101,14 +101,14 @@ func TestAuthController_AuthenticationMiddleware(t *testing.T) {
 	})
 
 	userRepoMock := new(rmock.UserRepositoryMock)
-	userRepoMock.On("ById", uuid.MustParse("5eb2dd69-a43c-416f-a8ca-90eeb15c12e7")).
+	userRepoMock.On("ByID", uuid.MustParse("5eb2dd69-a43c-416f-a8ca-90eeb15c12e7")).
 		Return(nil)
 	johnNotActive := *johnDoe
 	johnNotActive.ID = uuid.MustParse("b2937baf-18dd-479e-b479-8fbfc855606f")
 	johnNotActive.Active = false
-	userRepoMock.On("ById", uuid.MustParse("b2937baf-18dd-479e-b479-8fbfc855606f")).
+	userRepoMock.On("ByID", uuid.MustParse("b2937baf-18dd-479e-b479-8fbfc855606f")).
 		Return(&johnNotActive)
-	userRepoMock.On("ById", johnDoe.ID).Return(johnDoe)
+	userRepoMock.On("ByID", johnDoe.ID).Return(johnDoe)
 
 	contr := NewAuthController(userRepoMock, jwt.None())
 

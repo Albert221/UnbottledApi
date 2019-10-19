@@ -11,7 +11,8 @@ var (
 )
 
 type PointRepository interface {
-	ById(id uuid.UUID) *entity.Point
+	ByID(id uuid.UUID) *entity.Point
 	InArea(lat, lng, radius float32) ([]*entity.Point, error)
+	ByAuthorID(authorID uuid.UUID) []*entity.Point
 	Save(point *entity.Point) error
 }

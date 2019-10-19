@@ -53,12 +53,12 @@ func TestUserRepository_ById(t *testing.T) {
 	repo := NewUserRepository(db)
 
 	t.Run("returns correctly john", func(t *testing.T) {
-		user := repo.ById(johnDoe.ID)
+		user := repo.ByID(johnDoe.ID)
 		assert.Equal(t, johnDoe.ID, user.ID)
 	})
 
 	t.Run("returns correctly nothing", func(t *testing.T) {
-		user := repo.ById(uuid.MustParse("f923f3e3-94c0-43c3-83e2-f9a772e16f23"))
+		user := repo.ByID(uuid.MustParse("f923f3e3-94c0-43c3-83e2-f9a772e16f23"))
 		assert.Nil(t, user)
 	})
 }

@@ -23,7 +23,7 @@ func (PhotoRepository) result(point *entity.Photo) *entity.Photo {
 	return point
 }
 
-func (p *PhotoRepository) ById(id uuid.UUID) *entity.Photo {
+func (p *PhotoRepository) ByID(id uuid.UUID) *entity.Photo {
 	photo := new(entity.Photo)
 	p.db.First(photo, "id = ?", id.String())
 

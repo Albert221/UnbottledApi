@@ -26,7 +26,7 @@ type application struct {
 	jwtAlgo jwt.Algorithm
 }
 
-func newApplication(dbDsn, port string) (*application, error) {
+func newApplication(dbDsn, port string, secret []byte) (*application, error) {
 	db, err := gorm.Open("mysql", dbDsn+"?parseTime=true")
 	if err != nil {
 		return nil, err
@@ -42,7 +42,7 @@ func newApplication(dbDsn, port string) (*application, error) {
 		users:   mysql.NewUserRepository(db),
 		points:  mysql.NewPointRepository(db),
 		photos:  mysql.NewPhotoRepository(db),
-		jwtAlgo: jwt.NewHS256([]byte("mTdm6czopftZKezaMAS2BWEo91bCVjNF")),
+		jwtAlgo: jwt.NewHS256(secret),
 	}, nil
 }
 
@@ -55,6 +55,8 @@ func (a *application) Migrate() {
 }
 
 func (a *application) Serve() error {
+	// todo(Albert221): run a cleanup of photos every x hours to remove not used photos
+
 	authContr := controller.NewAuthController(a.users, a.jwtAlgo)
 	userContr := controller.NewUserController(a.users)
 	pointContr := controller.NewPointController(a.points, a.photos)

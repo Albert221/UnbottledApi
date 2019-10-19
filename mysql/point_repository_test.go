@@ -53,14 +53,14 @@ func TestPointRepository_ById(t *testing.T) {
 	repo := NewPointRepository(db)
 
 	t.Run("returns correctly warsaw", func(t *testing.T) {
-		point := repo.ById(warsaw.ID)
+		point := repo.ByID(warsaw.ID)
 
 		assert.NotNil(t, point)
 		assert.Equal(t, warsaw.ID, point.ID)
 	})
 
 	t.Run("returns correctly nothing", func(t *testing.T) {
-		point := repo.ById(uuid.MustParse("28c80525-2617-4e2c-9aba-a7e1caff1347")) // random uuid
+		point := repo.ByID(uuid.MustParse("28c80525-2617-4e2c-9aba-a7e1caff1347")) // random uuid
 
 		assert.Nil(t, point)
 	})

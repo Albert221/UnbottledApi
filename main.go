@@ -16,8 +16,13 @@ func main() {
 		fmt.Println("PORT environment variable is required.")
 		os.Exit(1)
 	}
+	secret := os.Getenv("SECRET")
+	if secret == "" {
+		fmt.Println("SECRET environment variable is required.")
+		os.Exit(1)
+	}
 
-	app, err := newApplication(dbDsn, port)
+	app, err := newApplication(dbDsn, port, []byte(secret))
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)

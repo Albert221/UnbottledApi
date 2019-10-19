@@ -10,7 +10,7 @@ type UserRepositoryMock struct {
 	mock.Mock
 }
 
-func (m *UserRepositoryMock) ById(id uuid.UUID) *entity.User {
+func (m *UserRepositoryMock) ByID(id uuid.UUID) *entity.User {
 	args := m.Called(id)
 	if args.Get(0) == nil {
 		return nil

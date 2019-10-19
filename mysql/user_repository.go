@@ -23,7 +23,7 @@ func (UserRepository) result(user *entity.User) *entity.User {
 	return user
 }
 
-func (u *UserRepository) ById(id uuid.UUID) *entity.User {
+func (u *UserRepository) ByID(id uuid.UUID) *entity.User {
 	user := new(entity.User)
 	u.db.First(&user, "id = ?", id.String())
 

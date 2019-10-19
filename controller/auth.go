@@ -108,7 +108,7 @@ func (a *AuthController) AuthenticationMiddleware(h http.Handler) http.Handler {
 			return
 		}
 
-		user := a.users.ById(payload.UserID)
+		user := a.users.ByID(payload.UserID)
 		if user == nil {
 			w.WriteHeader(http.StatusUnauthorized)
 			_ = json.NewEncoder(w).Encode(map[string]string{"error": "User for given token does not exist"})

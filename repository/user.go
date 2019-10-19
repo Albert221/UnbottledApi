@@ -6,7 +6,7 @@ import (
 )
 
 type UserRepository interface {
-	ById(id uuid.UUID) *entity.User
+	ByID(id uuid.UUID) *entity.User
 	ByUsernameOrEmail(value string) *entity.User
 	Save(user *entity.User) error
 }

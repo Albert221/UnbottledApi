@@ -24,7 +24,7 @@ func (PointRepository) result(point *entity.Point) *entity.Point {
 	return point
 }
 
-func (p *PointRepository) ById(id uuid.UUID) *entity.Point {
+func (p *PointRepository) ByID(id uuid.UUID) *entity.Point {
 	point := new(entity.Point)
 	p.db.Preload("Photo").First(point, "id = ?", id.String())
 
@@ -46,6 +46,10 @@ func (p *PointRepository) InArea(lat, lng, radius float32) ([]*entity.Point, err
 		Find(&points)
 
 	return points, nil
+}
+
+func (p *PointRepository) ByAuthorID(authorID uuid.UUID) []*entity.Point {
+	return nil
 }
 
 func (p *PointRepository) Save(point *entity.Point) error {

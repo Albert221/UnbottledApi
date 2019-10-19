@@ -6,6 +6,6 @@ import (
 )
 
 type PhotoRepository interface {
-	ById(id uuid.UUID) *entity.Photo
+	ByID(id uuid.UUID) *entity.Photo
 	Save(photo *entity.Photo) error
 }
