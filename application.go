@@ -18,10 +18,11 @@ import (
 type application struct {
 	port string
 
-	db     *gorm.DB
-	users  repository.UserRepository
-	points repository.PointRepository
-	photos repository.PhotoRepository
+	db      *gorm.DB
+	users   repository.UserRepository
+	points  repository.PointRepository
+	photos  repository.PhotoRepository
+	ratings repository.RatingRepository
 
 	jwtAlgo jwt.Algorithm
 }
@@ -42,6 +43,7 @@ func newApplication(dbDsn, port string, secret []byte) (*application, error) {
 		users:   mysql.NewUserRepository(db),
 		points:  mysql.NewPointRepository(db),
 		photos:  mysql.NewPhotoRepository(db),
+		ratings: mysql.NewRatingRepository(db),
 		jwtAlgo: jwt.NewHS256(secret),
 	}, nil
 }
@@ -51,7 +53,7 @@ func prepareFilesystem() error {
 }
 
 func (a *application) Migrate() {
-	a.db.AutoMigrate(entity.User{}, entity.Point{}, entity.Photo{})
+	a.db.AutoMigrate(entity.User{}, entity.Point{}, entity.Photo{}, entity.Rating{})
 }
 
 func (a *application) Serve() error {
@@ -59,7 +61,7 @@ func (a *application) Serve() error {
 
 	authContr := controller.NewAuthController(a.users, a.jwtAlgo)
 	userContr := controller.NewUserController(a.users)
-	pointContr := controller.NewPointController(a.points, a.photos)
+	pointContr := controller.NewPointController(a.points, a.photos, a.ratings)
 
 	r := mux.NewRouter()
 	r.Use(mux.MiddlewareFunc(authContr.AuthenticationMiddleware))

@@ -10,4 +10,7 @@ type Point struct {
 	Longitude float32   `json:"longitude" gorm:"not null"`
 	PhotoID   uuid.UUID `json:"photo_id" gorm:"char(36)"`
 	Photo     Photo     `json:"photo" gorm:"foreignkey:PhotoID"`
+
+	AverageTaste float32 `json:"average_taste" gorm:"-"`
+	UserRating   *Rating `json:"user_rating" gorm:"-"`
 }

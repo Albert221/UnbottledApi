@@ -5,6 +5,7 @@ import (
 	"errors"
 	"github.com/Albert221/UnbottledApi/entity"
 	valid "github.com/asaskevich/govalidator"
+	"io"
 	"net/http"
 )
 
@@ -27,4 +28,8 @@ func decodeAndValidateBody(body interface{}, r *http.Request) error {
 	_, err := valid.ValidateStruct(body)
 
 	return err
+}
+
+func writeJSON(w io.Writer, body interface{}) {
+	_ = json.NewEncoder(w).Encode(body)
 }

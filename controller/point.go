@@ -1,7 +1,6 @@
 package controller
 
 import (
-	"encoding/json"
 	"github.com/Albert221/UnbottledApi/entity"
 	"github.com/Albert221/UnbottledApi/repository"
 	"github.com/google/uuid"
@@ -14,14 +13,16 @@ import (
 )
 
 type PointController struct {
-	points repository.PointRepository
-	photos repository.PhotoRepository
+	points  repository.PointRepository
+	photos  repository.PhotoRepository
+	ratings repository.RatingRepository
 }
 
-func NewPointController(points repository.PointRepository, photos repository.PhotoRepository) *PointController {
+func NewPointController(points repository.PointRepository, photos repository.PhotoRepository, ratings repository.RatingRepository) *PointController {
 	return &PointController{
-		points: points,
-		photos: photos,
+		points:  points,
+		photos:  photos,
+		ratings: ratings,
 	}
 }
 
@@ -36,7 +37,7 @@ func (p *PointController) GetPointsHandler(w http.ResponseWriter, r *http.Reques
 				message += "; "
 			}
 		}
-		_ = json.NewEncoder(w).Encode(map[string]string{"error": message})
+		writeJSON(w, map[string]string{"error": message})
 		return
 	}
 
@@ -47,7 +48,7 @@ func (p *PointController) GetPointsHandler(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	_ = json.NewEncoder(w).Encode(map[string]interface{}{"points": points})
+	writeJSON(w, map[string]interface{}{"points": points})
 }
 
 func (PointController) parseLatLngRadiusVars(r *http.Request) (float32, float32, float32, []error) {
@@ -79,7 +80,7 @@ func (p *PointController) GetMyPoints(w http.ResponseWriter, r *http.Request) {
 
 	points := p.points.ByAuthorID(user.ID)
 
-	_ = json.NewEncoder(w).Encode(map[string]interface{}{"points": points})
+	writeJSON(w, map[string]interface{}{"points": points})
 }
 
 func (p *PointController) UploadPhoto(w http.ResponseWriter, r *http.Request) {
@@ -92,14 +93,14 @@ func (p *PointController) UploadPhoto(w http.ResponseWriter, r *http.Request) {
 	mime := r.Header.Get("Content-Type")
 	if mime != "image/jpeg" {
 		w.WriteHeader(http.StatusBadRequest)
-		_ = json.NewEncoder(w).Encode(map[string]string{"error": "Only image/jpeg Content-Type is permitted"})
+		writeJSON(w, map[string]string{"error": "Only image/jpeg Content-Type is permitted"})
 		return
 	}
 
 	const maxSize = (1 << 20) * 5 // 5MiB
 	if r.ContentLength == -1 || r.ContentLength > maxSize {
 		w.WriteHeader(http.StatusRequestEntityTooLarge)
-		_ = json.NewEncoder(w).Encode(map[string]string{"error": "Photos with a maximum size of 5MiB are permitted"})
+		writeJSON(w, map[string]string{"error": "Photos with a maximum size of 5MiB are permitted"})
 		return
 	}
 
@@ -137,7 +138,7 @@ func (p *PointController) UploadPhoto(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusCreated)
-	_ = json.NewEncoder(w).Encode(map[string]interface{}{"photo": photo})
+	writeJSON(w, map[string]interface{}{"photo": photo})
 }
 
 func (p *PointController) AddHandler(w http.ResponseWriter, r *http.Request) {
@@ -155,21 +156,21 @@ func (p *PointController) AddHandler(w http.ResponseWriter, r *http.Request) {
 
 	if err := decodeAndValidateBody(&body, r); err != nil {
 		w.WriteHeader(http.StatusBadRequest)
-		_ = json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
+		writeJSON(w, map[string]string{"error": err.Error()})
 		return
 	}
 
 	photoId, err := uuid.Parse(body.PhotoId)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
-		_ = json.NewEncoder(w).Encode(map[string]string{"error": "Invalid photo_id"})
+		writeJSON(w, map[string]string{"error": "Invalid photo_id"})
 		return
 	}
 
 	photo := p.photos.ByID(photoId)
 	if photo == nil {
 		w.WriteHeader(http.StatusBadRequest)
-		_ = json.NewEncoder(w).Encode(map[string]string{"error": "Photo with given ID does not exist"})
+		writeJSON(w, map[string]string{"error": "Photo with given ID does not exist"})
 		return
 	}
 
@@ -188,5 +189,19 @@ func (p *PointController) AddHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusCreated)
-	_ = json.NewEncoder(w).Encode(map[string]interface{}{"point": point})
+	writeJSON(w, map[string]interface{}{"point": point})
+}
+
+func (p *PointController) RateHandler(w http.ResponseWriter, r *http.Request) {
+	// todo(Albert221): add getting point id from link etc., complete this handler
+
+	var body struct {
+		Taste int32 `json:"taste" valid:"required,range(1,5)"`
+	}
+
+	if err := decodeAndValidateBody(&body, r); err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		writeJSON(w, map[string]string{"error": err.Error()})
+		return
+	}
 }
