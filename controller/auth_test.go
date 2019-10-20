@@ -91,6 +91,22 @@ func TestAuthController_AuthenticateHandler(t *testing.T) {
 	}
 }
 
+func TestAuthController_RefreshToken(t *testing.T) {
+	userRepoMock := new(rmock.UserRepositoryMock)
+	userRepoMock.On("ByID", uuid.MustParse("bd65f5b2-8563-40c8-8ce6-4d19164fb045")).Return(johnDoe)
+
+	contr := NewAuthController(userRepoMock, jwt.None())
+
+	rr := httptest.NewRecorder()
+	body := strings.NewReader("{\"old_token\": \"ew0KICAiYWxnIjogIm5vbmUiLA0KICAidHlwIjogIkpXVCINCn0.eyJpYXQiO" +
+		"jE1MTYyMzkwMjIsImV4cCI6NDEwMjQ0ODQ2MSwidXNlcl9pZCI6ImJkNjVmNWIyLTg1NjMtNDBjOC04Y2U2LTRkMTkxNjRmYjA0NSJ9.\"}")
+	r := httptest.NewRequest("GET", "/", body)
+
+	contr.RefreshToken(rr, r)
+
+	assert.Equal(t, http.StatusOK, rr.Code)
+}
+
 func TestAuthController_AuthenticationMiddleware(t *testing.T) {
 	okHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// do nothing, it returns HTTP 200 and if there is user in context - prints its id

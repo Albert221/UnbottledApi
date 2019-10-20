@@ -12,6 +12,8 @@ import (
 	"time"
 )
 
+// todo(Albert221): DRY here!!!
+
 type AuthController struct {
 	users   repository.UserRepository
 	jwtAlgo jwt.Algorithm
@@ -69,7 +71,62 @@ func (a *AuthController) AuthenticateHandler(w http.ResponseWriter, r *http.Requ
 
 	writeJSON(w, map[string]interface{}{
 		"access_token": string(accessToken),
-		"user": user,
+		"user":         user,
+	})
+}
+
+func (a *AuthController) RefreshToken(w http.ResponseWriter, r *http.Request) {
+	// todo(Albert221): use refresh token for its refreshment, not the ordinary token
+	var body struct {
+		OldToken string `json:"old_token" valid:"required"`
+	}
+
+	if err := decodeAndValidateBody(&body, r); err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		writeJSON(w, map[string]string{"error": err.Error()})
+		return
+	}
+
+	var payload jwtPayload
+	_, err := jwt.Verify([]byte(body.OldToken), a.jwtAlgo, &payload)
+	if err != nil {
+		w.WriteHeader(http.StatusUnauthorized)
+		writeJSON(w, map[string]string{"error": "Given token is invalid"})
+		return
+	}
+
+	user := a.users.ByID(payload.UserID)
+	if user == nil {
+		w.WriteHeader(http.StatusUnauthorized)
+		writeJSON(w, map[string]string{"error": "User for given token does not exist"})
+		return
+	}
+
+	if !user.Active {
+		w.WriteHeader(http.StatusUnauthorized)
+		writeJSON(w, map[string]string{"error": "User is not active"})
+		return
+	}
+
+	payload = jwtPayload{
+		UserID: user.ID,
+		Payload: jwt.Payload{
+			ExpirationTime: jwt.NumericDate(time.Now().Add(2 * time.Hour)),
+			IssuedAt:       jwt.NumericDate(time.Now()),
+		},
+	}
+
+	// todo(Albert221): return refresh token too
+	accessToken, err := jwt.Sign(payload, a.jwtAlgo)
+	if err != nil {
+		log.Print(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	writeJSON(w, map[string]interface{}{
+		"access_token": string(accessToken),
+		"user":         user,
 	})
 }
 
