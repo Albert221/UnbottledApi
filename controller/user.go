@@ -1,7 +1,6 @@
 package controller
 
 import (
-	"encoding/json"
 	"github.com/Albert221/UnbottledApi/entity"
 	"github.com/Albert221/UnbottledApi/repository"
 	"golang.org/x/crypto/bcrypt"
@@ -27,7 +26,7 @@ func (u *UserController) CreateHandler(w http.ResponseWriter, r *http.Request) {
 
 	if err := decodeAndValidateBody(&body, r); err != nil {
 		w.WriteHeader(http.StatusBadRequest)
-		_ = json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
+		writeJSON(w, map[string]string{"error": err.Error()})
 		return
 	}
 
@@ -51,9 +50,9 @@ func (u *UserController) CreateHandler(w http.ResponseWriter, r *http.Request) {
 		if strings.Contains(err.Error(), "Duplicate entry") {
 			w.WriteHeader(http.StatusBadRequest)
 			if strings.Contains(err.Error(), "_username") {
-				_ = json.NewEncoder(w).Encode(map[string]string{"error": "That username is already taken"})
+				writeJSON(w, map[string]string{"error": "That username is already taken"})
 			} else { // email
-				_ = json.NewEncoder(w).Encode(map[string]string{"error": "That email is already taken"})
+				writeJSON(w, map[string]string{"error": "That email is already taken"})
 			}
 			return
 		}
@@ -64,5 +63,5 @@ func (u *UserController) CreateHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusCreated)
-	_ = json.NewEncoder(w).Encode(map[string]interface{}{"user": user})
+	writeJSON(w, map[string]interface{}{"user": user})
 }

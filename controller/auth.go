@@ -2,9 +2,7 @@ package controller
 
 import (
 	"context"
-	"encoding/json"
 	"github.com/Albert221/UnbottledApi/repository"
-	valid "github.com/asaskevich/govalidator"
 	"github.com/gbrlsnchs/jwt/v3"
 	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
@@ -34,28 +32,22 @@ func (a *AuthController) AuthenticateHandler(w http.ResponseWriter, r *http.Requ
 		Password        string `json:"password" valid:"required"`
 	}
 
-	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+	if err := decodeAndValidateBody(&body, r); err != nil {
 		w.WriteHeader(http.StatusBadRequest)
-		_ = json.NewEncoder(w).Encode(map[string]string{"error": "Request body must be a valid json"})
-		return
-	}
-
-	if _, err := valid.ValidateStruct(body); err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		_ = json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
+		writeJSON(w, map[string]string{"error": err.Error()})
 		return
 	}
 
 	user := a.users.ByUsernameOrEmail(body.EmailOrUsername)
 	if user == nil || bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(body.Password)) != nil {
 		w.WriteHeader(http.StatusBadRequest)
-		_ = json.NewEncoder(w).Encode(map[string]string{"error": "Bad credentials"})
+		writeJSON(w, map[string]string{"error": "Bad credentials"})
 		return
 	}
 
 	if !user.Active {
 		w.WriteHeader(http.StatusBadRequest)
-		_ = json.NewEncoder(w).Encode(map[string]string{"error": "User is not active"})
+		writeJSON(w, map[string]string{"error": "User is not active"})
 		return
 	}
 
@@ -75,7 +67,7 @@ func (a *AuthController) AuthenticateHandler(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	_ = json.NewEncoder(w).Encode(map[string]interface{}{
+	writeJSON(w, map[string]interface{}{
 		"access_token": string(accessToken),
 		"user": user,
 	})
@@ -93,7 +85,7 @@ func (a *AuthController) AuthenticationMiddleware(h http.Handler) http.Handler {
 		parts := strings.Split(authHeader, " ")
 		if len(parts) < 2 || strings.ToLower(parts[0]) != "bearer" {
 			w.WriteHeader(http.StatusUnauthorized)
-			_ = json.NewEncoder(w).Encode(map[string]string{"error": "Authorization header is invalid"})
+			writeJSON(w, map[string]string{"error": "Authorization header is invalid"})
 			return
 		}
 
@@ -104,20 +96,20 @@ func (a *AuthController) AuthenticationMiddleware(h http.Handler) http.Handler {
 		_, err := jwt.Verify([]byte(jwtToken), a.jwtAlgo, &payload, payloadValidator)
 		if err != nil {
 			w.WriteHeader(http.StatusUnauthorized)
-			_ = json.NewEncoder(w).Encode(map[string]string{"error": "Given token is invalid or expired"})
+			writeJSON(w, map[string]string{"error": "Given token is invalid or expired"})
 			return
 		}
 
 		user := a.users.ByID(payload.UserID)
 		if user == nil {
 			w.WriteHeader(http.StatusUnauthorized)
-			_ = json.NewEncoder(w).Encode(map[string]string{"error": "User for given token does not exist"})
+			writeJSON(w, map[string]string{"error": "User for given token does not exist"})
 			return
 		}
 
 		if !user.Active {
 			w.WriteHeader(http.StatusUnauthorized)
-			_ = json.NewEncoder(w).Encode(map[string]string{"error": "User is not active"})
+			writeJSON(w, map[string]string{"error": "User is not active"})
 			return
 		}
 

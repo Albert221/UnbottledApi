@@ -63,7 +63,7 @@ func TestAuthController_AuthenticateHandler(t *testing.T) {
 			Body: "hey im not a valid json",
 			Check: func(t *testing.T, r *httptest.ResponseRecorder) {
 				assert.Equal(t, http.StatusBadRequest, r.Code)
-				assert.JSONEq(t, `{"error": "Request body must be a valid json"}`, r.Body.String())
+				assert.JSONEq(t, `{"error": "request body must be a valid json"}`, r.Body.String())
 			},
 		},
 		{
