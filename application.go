@@ -71,7 +71,7 @@ func (a *application) Serve() error {
 	r.HandleFunc("/user", userContr.CreateHandler).Methods("POST")
 
 	r.HandleFunc("/point/{lat},{lng},{radius}", pointContr.GetPointsHandler).Methods("GET")
-	r.HandleFunc("/point/mine", nil).Methods("GET")
+	r.HandleFunc("/point/mine", pointContr.GetMyPoints).Methods("GET")
 	r.HandleFunc("/point/photo", pointContr.UploadPhoto).Methods("POST")
 	r.HandleFunc("/point", pointContr.AddHandler).Methods("POST")
 
