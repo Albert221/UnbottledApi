@@ -29,7 +29,6 @@ func NewPointController(points repository.PointRepository, photos repository.Pho
 func (p *PointController) GetPointsHandler(w http.ResponseWriter, r *http.Request) {
 	lat, lng, radius, errors := p.parseLatLngRadiusVars(r)
 	if len(errors) > 1 {
-		w.WriteHeader(http.StatusBadRequest)
 		var message string
 		for i, err := range errors {
 			message += err.Error()
@@ -37,7 +36,7 @@ func (p *PointController) GetPointsHandler(w http.ResponseWriter, r *http.Reques
 				message += "; "
 			}
 		}
-		writeJSON(w, map[string]string{"error": message})
+		writeJSON(w, map[string]string{"error": message}, http.StatusBadRequest)
 		return
 	}
 
@@ -48,7 +47,7 @@ func (p *PointController) GetPointsHandler(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	writeJSON(w, map[string]interface{}{"points": points})
+	writeJSON(w, map[string]interface{}{"points": points}, http.StatusOK)
 }
 
 func (PointController) parseLatLngRadiusVars(r *http.Request) (float32, float32, float32, []error) {
@@ -80,7 +79,7 @@ func (p *PointController) GetMyPoints(w http.ResponseWriter, r *http.Request) {
 
 	points := p.points.ByAuthorID(user.ID)
 
-	writeJSON(w, map[string]interface{}{"points": points})
+	writeJSON(w, map[string]interface{}{"points": points}, http.StatusOK)
 }
 
 func (p *PointController) UploadPhoto(w http.ResponseWriter, r *http.Request) {
@@ -92,15 +91,17 @@ func (p *PointController) UploadPhoto(w http.ResponseWriter, r *http.Request) {
 
 	mime := r.Header.Get("Content-Type")
 	if mime != "image/jpeg" {
-		w.WriteHeader(http.StatusBadRequest)
-		writeJSON(w, map[string]string{"error": "Only image/jpeg Content-Type is permitted"})
+		writeJSON(w, map[string]string{
+			"error": "Only image/jpeg Content-Type is permitted",
+		}, http.StatusBadRequest)
 		return
 	}
 
 	const maxSize = (1 << 20) * 5 // 5MiB
 	if r.ContentLength == -1 || r.ContentLength > maxSize {
-		w.WriteHeader(http.StatusRequestEntityTooLarge)
-		writeJSON(w, map[string]string{"error": "Photos with a maximum size of 5MiB are permitted"})
+		writeJSON(w, map[string]string{
+			"error": "Photos with a maximum size of 5MiB are permitted",
+		}, http.StatusRequestEntityTooLarge)
 		return
 	}
 
@@ -137,8 +138,7 @@ func (p *PointController) UploadPhoto(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.WriteHeader(http.StatusCreated)
-	writeJSON(w, map[string]interface{}{"photo": photo})
+	writeJSON(w, map[string]interface{}{"photo": photo}, http.StatusCreated)
 }
 
 func (p *PointController) AddHandler(w http.ResponseWriter, r *http.Request) {
@@ -155,22 +155,19 @@ func (p *PointController) AddHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := decodeAndValidateBody(&body, r); err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		writeJSON(w, map[string]string{"error": err.Error()})
+		writeJSON(w, map[string]string{"error": err.Error()}, http.StatusBadRequest)
 		return
 	}
 
 	photoId, err := uuid.Parse(body.PhotoId)
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		writeJSON(w, map[string]string{"error": "Invalid photo_id"})
+		writeJSON(w, map[string]string{"error": "Invalid photo_id"}, http.StatusBadRequest)
 		return
 	}
 
 	photo := p.photos.ByID(photoId)
 	if photo == nil {
-		w.WriteHeader(http.StatusBadRequest)
-		writeJSON(w, map[string]string{"error": "Photo with given ID does not exist"})
+		writeJSON(w, map[string]string{"error": "Photo with given ID does not exist"}, http.StatusBadRequest)
 		return
 	}
 
@@ -188,8 +185,7 @@ func (p *PointController) AddHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.WriteHeader(http.StatusCreated)
-	writeJSON(w, map[string]interface{}{"point": point})
+	writeJSON(w, map[string]interface{}{"point": point}, http.StatusCreated)
 }
 
 func (p *PointController) RateHandler(w http.ResponseWriter, r *http.Request) {
@@ -200,8 +196,7 @@ func (p *PointController) RateHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := decodeAndValidateBody(&body, r); err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		writeJSON(w, map[string]string{"error": err.Error()})
+		writeJSON(w, map[string]string{"error": err.Error()}, http.StatusBadRequest)
 		return
 	}
 }

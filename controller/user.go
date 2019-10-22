@@ -25,8 +25,7 @@ func (u *UserController) CreateHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := decodeAndValidateBody(&body, r); err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		writeJSON(w, map[string]string{"error": err.Error()})
+		writeJSON(w, map[string]string{"error": err.Error()}, http.StatusBadRequest)
 		return
 	}
 
@@ -48,11 +47,10 @@ func (u *UserController) CreateHandler(w http.ResponseWriter, r *http.Request) {
 
 	if err := u.users.Save(user); err != nil {
 		if strings.Contains(err.Error(), "Duplicate entry") {
-			w.WriteHeader(http.StatusBadRequest)
 			if strings.Contains(err.Error(), "_username") {
-				writeJSON(w, map[string]string{"error": "That username is already taken"})
+				writeJSON(w, map[string]string{"error": "That username is already taken"}, http.StatusBadRequest)
 			} else { // email
-				writeJSON(w, map[string]string{"error": "That email is already taken"})
+				writeJSON(w, map[string]string{"error": "That email is already taken"}, http.StatusBadRequest)
 			}
 			return
 		}
@@ -62,6 +60,5 @@ func (u *UserController) CreateHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.WriteHeader(http.StatusCreated)
-	writeJSON(w, map[string]interface{}{"user": user})
+	writeJSON(w, map[string]interface{}{"user": user}, http.StatusCreated)
 }

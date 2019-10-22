@@ -29,7 +29,8 @@ func decodeAndValidateBody(body interface{}, r *http.Request) error {
 	return err
 }
 
-func writeJSON(w http.ResponseWriter, body interface{}) {
+func writeJSON(w http.ResponseWriter, body interface{}, statusCode int) {
 	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(statusCode)
 	_ = json.NewEncoder(w).Encode(body)
 }

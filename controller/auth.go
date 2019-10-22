@@ -35,21 +35,18 @@ func (a *AuthController) AuthenticateHandler(w http.ResponseWriter, r *http.Requ
 	}
 
 	if err := decodeAndValidateBody(&body, r); err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		writeJSON(w, map[string]string{"error": err.Error()})
+		writeJSON(w, map[string]string{"error": err.Error()}, http.StatusBadRequest)
 		return
 	}
 
 	user := a.users.ByUsernameOrEmail(body.EmailOrUsername)
 	if user == nil || bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(body.Password)) != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		writeJSON(w, map[string]string{"error": "Bad credentials"})
+		writeJSON(w, map[string]string{"error": "Bad credentials"}, http.StatusBadRequest)
 		return
 	}
 
 	if !user.Active {
-		w.WriteHeader(http.StatusBadRequest)
-		writeJSON(w, map[string]string{"error": "User is not active"})
+		writeJSON(w, map[string]string{"error": "User is not active"}, http.StatusBadRequest)
 		return
 	}
 
@@ -72,7 +69,7 @@ func (a *AuthController) AuthenticateHandler(w http.ResponseWriter, r *http.Requ
 	writeJSON(w, map[string]interface{}{
 		"access_token": string(accessToken),
 		"user":         user,
-	})
+	}, http.StatusOK)
 }
 
 func (a *AuthController) RefreshToken(w http.ResponseWriter, r *http.Request) {
@@ -82,29 +79,25 @@ func (a *AuthController) RefreshToken(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := decodeAndValidateBody(&body, r); err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		writeJSON(w, map[string]string{"error": err.Error()})
+		writeJSON(w, map[string]string{"error": err.Error()}, http.StatusBadRequest)
 		return
 	}
 
 	var payload jwtPayload
 	_, err := jwt.Verify([]byte(body.OldToken), a.jwtAlgo, &payload)
 	if err != nil {
-		w.WriteHeader(http.StatusUnauthorized)
-		writeJSON(w, map[string]string{"error": "Given token is invalid"})
+		writeJSON(w, map[string]string{"error": "Given token is invalid"}, http.StatusUnauthorized)
 		return
 	}
 
 	user := a.users.ByID(payload.UserID)
 	if user == nil {
-		w.WriteHeader(http.StatusUnauthorized)
-		writeJSON(w, map[string]string{"error": "User for given token does not exist"})
+		writeJSON(w, map[string]string{"error": "User for given token does not exist"}, http.StatusUnauthorized)
 		return
 	}
 
 	if !user.Active {
-		w.WriteHeader(http.StatusUnauthorized)
-		writeJSON(w, map[string]string{"error": "User is not active"})
+		writeJSON(w, map[string]string{"error": "User is not active"}, http.StatusUnauthorized)
 		return
 	}
 
@@ -127,7 +120,7 @@ func (a *AuthController) RefreshToken(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, map[string]interface{}{
 		"access_token": string(accessToken),
 		"user":         user,
-	})
+	}, http.StatusOK)
 }
 
 func (a *AuthController) AuthenticationMiddleware(h http.Handler) http.Handler {
@@ -141,8 +134,7 @@ func (a *AuthController) AuthenticationMiddleware(h http.Handler) http.Handler {
 
 		parts := strings.Split(authHeader, " ")
 		if len(parts) < 2 || strings.ToLower(parts[0]) != "bearer" {
-			w.WriteHeader(http.StatusUnauthorized)
-			writeJSON(w, map[string]string{"error": "Authorization header is invalid"})
+			writeJSON(w, map[string]string{"error": "Authorization header is invalid"}, http.StatusUnauthorized)
 			return
 		}
 
@@ -152,21 +144,18 @@ func (a *AuthController) AuthenticationMiddleware(h http.Handler) http.Handler {
 		payloadValidator := jwt.ValidatePayload(&payload.Payload, jwt.ExpirationTimeValidator(time.Now()))
 		_, err := jwt.Verify([]byte(jwtToken), a.jwtAlgo, &payload, payloadValidator)
 		if err != nil {
-			w.WriteHeader(http.StatusUnauthorized)
-			writeJSON(w, map[string]string{"error": "Given token is invalid or expired"})
+			writeJSON(w, map[string]string{"error": "Given token is invalid or expired"}, http.StatusUnauthorized)
 			return
 		}
 
 		user := a.users.ByID(payload.UserID)
 		if user == nil {
-			w.WriteHeader(http.StatusUnauthorized)
-			writeJSON(w, map[string]string{"error": "User for given token does not exist"})
+			writeJSON(w, map[string]string{"error": "User for given token does not exist"}, http.StatusUnauthorized)
 			return
 		}
 
 		if !user.Active {
-			w.WriteHeader(http.StatusUnauthorized)
-			writeJSON(w, map[string]string{"error": "User is not active"})
+			writeJSON(w, map[string]string{"error": "User is not active"}, http.StatusUnauthorized)
 			return
 		}
 
