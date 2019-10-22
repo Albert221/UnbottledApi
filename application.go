@@ -67,6 +67,7 @@ func (a *application) Serve() error {
 	r.Use(mux.MiddlewareFunc(authContr.AuthenticationMiddleware))
 
 	r.HandleFunc("/auth/authenticate", authContr.AuthenticateHandler).Methods("POST")
+	r.HandleFunc("/auth/refresh-token", authContr.RefreshToken).Methods("POST")
 
 	r.HandleFunc("/user", userContr.CreateHandler).Methods("POST")
 
