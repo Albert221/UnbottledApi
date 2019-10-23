@@ -151,7 +151,7 @@ func (p *PointController) AddHandler(w http.ResponseWriter, r *http.Request) {
 	var body struct {
 		Latitude  float32 `json:"latitude" valid:"required,latitude"`
 		Longitude float32 `json:"longitude" valid:"required,longitude"`
-		PhotoId   string  `json:"photo_id" valid:"required,uuid"`
+		PhotoId   string  `json:"photo_id" valid:"uuid"`
 	}
 
 	if err := decodeAndValidateBody(&body, r); err != nil {
@@ -159,25 +159,29 @@ func (p *PointController) AddHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	photoId, err := uuid.Parse(body.PhotoId)
-	if err != nil {
-		writeJSON(w, map[string]string{"error": "Invalid photo_id"}, http.StatusBadRequest)
-		return
-	}
-
-	photo := p.photos.ByID(photoId)
-	if photo == nil {
-		writeJSON(w, map[string]string{"error": "Photo with given ID does not exist"}, http.StatusBadRequest)
-		return
-	}
-
 	point := &entity.Point{
 		Latitude:  body.Latitude,
 		Longitude: body.Longitude,
-		PhotoID:   photoId,
-		Photo:     *photo,
 		AuthorID:  user.ID,
 	}
+
+	if body.PhotoId != "" {
+		photoId, err := uuid.Parse(body.PhotoId)
+		if err != nil {
+			writeJSON(w, map[string]string{"error": "Invalid photo_id"}, http.StatusBadRequest)
+			return
+		}
+
+		photo := p.photos.ByID(photoId)
+		if photo == nil {
+			writeJSON(w, map[string]string{"error": "Photo with given ID does not exist"}, http.StatusBadRequest)
+			return
+		}
+
+		point.PhotoID = photoId
+		point.Photo = *photo
+	}
+
 
 	if err := p.points.Save(point); err != nil {
 		log.Println(err)
