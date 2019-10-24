@@ -51,7 +51,7 @@ func (p *PointController) GetPointsHandler(w http.ResponseWriter, r *http.Reques
 
 	for _, point := range points {
 		if point.Photo.ID.String() != "" {
-			point.Photo.PopulateUrl(r.URL)
+			point.Photo.PopulateUrl(r.Host)
 		}
 	}
 
@@ -88,7 +88,7 @@ func (p *PointController) GetMyPoints(w http.ResponseWriter, r *http.Request) {
 	points := p.points.ByAuthorID(user.ID)
 	for _, point := range points {
 		if point.Photo.ID.String() != "" {
-			point.Photo.PopulateUrl(r.URL)
+			point.Photo.PopulateUrl(r.Host)
 		}
 	}
 
@@ -154,7 +154,7 @@ func (p *PointController) UploadPhoto(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	photo.PopulateUrl(r.URL)
+	photo.PopulateUrl(r.Host)
 	writeJSON(w, map[string]interface{}{"photo": photo}, http.StatusCreated)
 }
 
@@ -195,7 +195,7 @@ func (p *PointController) AddHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		photo.PopulateUrl(r.URL)
+		photo.PopulateUrl(r.Host)
 		point.PhotoID = photoId
 		point.Photo = *photo
 	}

@@ -3,7 +3,6 @@ package entity
 import (
 	"github.com/Albert221/UnbottledApi/storage"
 	"github.com/google/uuid"
-	"net/url"
 	"path"
 )
 
@@ -15,17 +14,10 @@ type Photo struct {
 	Url      string    `json:"url" gorm:"-"`
 }
 
-func (p *Photo) PopulateUrl(reqUrl *url.URL) {
+func (p *Photo) PopulateUrl(host string) {
 	if p.FileName == "" {
 		return
 	}
 
-	photoUrl := &url.URL{
-		Scheme: reqUrl.Scheme,
-		User:   reqUrl.User,
-		Host:   reqUrl.Host,
-		Path:   path.Join(storage.UploadsPath, p.FileName),
-	}
-
-	p.Url = photoUrl.String()
+	p.Url = "http://" + path.Join(host, storage.UploadsPath, p.FileName)
 }
