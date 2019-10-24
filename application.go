@@ -80,7 +80,7 @@ func (a *application) Serve() error {
 	uploadsDir := http.Dir(storage.UploadsDir)
 	r.PathPrefix("/uploads/").Handler(http.StripPrefix("/uploads/", http.FileServer(uploadsDir)))
 
-	addr := "127.0.0.1:" + a.port
+	addr := "0.0.0.0:" + a.port
 	fmt.Println("listening on " + addr)
 	srv := &http.Server{
 		Handler:      r,
