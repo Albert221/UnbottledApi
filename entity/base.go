@@ -19,7 +19,7 @@ func (b *Base) BeforeCreate(scope *gorm.Scope) error {
 	}
 
 	if b.CreatedAt.IsZero() {
-		return scope.SetColumn("CreatedAt", time.Now())
+		return scope.SetColumn("CreatedAt", time.Now().UTC())
 	}
 
 	return nil
