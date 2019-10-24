@@ -6,6 +6,7 @@ import (
 	"github.com/Albert221/UnbottledApi/entity"
 	"github.com/Albert221/UnbottledApi/mysql"
 	"github.com/Albert221/UnbottledApi/repository"
+	"github.com/Albert221/UnbottledApi/storage"
 	"github.com/gbrlsnchs/jwt/v3"
 	"github.com/gorilla/mux"
 	"github.com/jinzhu/gorm"
@@ -75,6 +76,9 @@ func (a *application) Serve() error {
 	r.HandleFunc("/point/mine", pointContr.GetMyPoints).Methods("GET")
 	r.HandleFunc("/point/photo", pointContr.UploadPhoto).Methods("POST")
 	r.HandleFunc("/point", pointContr.AddHandler).Methods("POST")
+
+	uploadsDir := http.Dir(storage.UploadsDir)
+	r.PathPrefix("/uploads/").Handler(http.StripPrefix("/uploads/", http.FileServer(uploadsDir)))
 
 	addr := "127.0.0.1:" + a.port
 	fmt.Println("listening on " + addr)

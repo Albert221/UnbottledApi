@@ -3,12 +3,14 @@ package controller
 import (
 	"github.com/Albert221/UnbottledApi/entity"
 	"github.com/Albert221/UnbottledApi/repository"
+	"github.com/Albert221/UnbottledApi/storage"
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 	"io"
 	"log"
 	"net/http"
 	"os"
+	"path"
 	"strconv"
 )
 
@@ -47,6 +49,12 @@ func (p *PointController) GetPointsHandler(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
+	for _, point := range points {
+		if point.Photo.ID.String() != "" {
+			point.Photo.PopulateUrl(r.URL)
+		}
+	}
+
 	writeJSON(w, map[string]interface{}{"points": points}, http.StatusOK)
 }
 
@@ -78,6 +86,11 @@ func (p *PointController) GetMyPoints(w http.ResponseWriter, r *http.Request) {
 	}
 
 	points := p.points.ByAuthorID(user.ID)
+	for _, point := range points {
+		if point.Photo.ID.String() != "" {
+			point.Photo.PopulateUrl(r.URL)
+		}
+	}
 
 	writeJSON(w, map[string]interface{}{"points": points}, http.StatusOK)
 }
@@ -89,16 +102,19 @@ func (p *PointController) UploadPhoto(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	mime := r.Header.Get("Content-Type")
-	if mime != "image/jpeg" {
+	r.ParseMultipartForm(10 << 20) // 10MB
+
+	reqFile, fileHeader, err := r.FormFile("photo")
+	if err != nil {
 		writeJSON(w, map[string]string{
-			"error": "Only image/jpeg Content-Type is permitted",
+			"error": "Error reading the photo",
 		}, http.StatusBadRequest)
 		return
 	}
+	defer reqFile.Close()
 
 	const maxSize = (1 << 20) * 5 // 5MiB
-	if r.ContentLength == -1 || r.ContentLength > maxSize {
+	if fileHeader.Size > maxSize {
 		writeJSON(w, map[string]string{
 			"error": "Photos with a maximum size of 5MiB are permitted",
 		}, http.StatusRequestEntityTooLarge)
@@ -116,7 +132,7 @@ func (p *PointController) UploadPhoto(w http.ResponseWriter, r *http.Request) {
 		FileName: fileName,
 	}
 
-	file, err := os.Create("uploads/" + fileName)
+	file, err := os.Create(path.Join(storage.UploadsDir, fileName))
 	if err != nil {
 		log.Print(err)
 		w.WriteHeader(http.StatusInternalServerError)
@@ -125,7 +141,7 @@ func (p *PointController) UploadPhoto(w http.ResponseWriter, r *http.Request) {
 	defer file.Close()
 
 	defer r.Body.Close()
-	_, err = io.Copy(file, r.Body)
+	_, err = io.Copy(file, reqFile)
 	if err != nil {
 		log.Print(err)
 		w.WriteHeader(http.StatusInternalServerError)
@@ -138,6 +154,7 @@ func (p *PointController) UploadPhoto(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	photo.PopulateUrl(r.URL)
 	writeJSON(w, map[string]interface{}{"photo": photo}, http.StatusCreated)
 }
 
@@ -178,10 +195,10 @@ func (p *PointController) AddHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
+		photo.PopulateUrl(r.URL)
 		point.PhotoID = photoId
 		point.Photo = *photo
 	}
-
 
 	if err := p.points.Save(point); err != nil {
 		log.Println(err)

@@ -16,7 +16,7 @@ var (
 	gdansk = &entity.Point{
 		Base: entity.Base{
 			ID:        uuid.MustParse("fa8a3e1d-05bd-42d7-a8c7-3cffe9471b88"),
-			CreatedAt: time.Now(),
+			CreatedAt: entity.Time{Time: time.Now()},
 		},
 		Latitude:  52.229788,
 		Longitude: 21.011729,
@@ -24,7 +24,7 @@ var (
 	warsaw = &entity.Point{
 		Base: entity.Base{
 			ID:        uuid.MustParse("041bf81f-a171-49a1-9da4-bafa1bf0e8ca"),
-			CreatedAt: time.Now(),
+			CreatedAt: entity.Time{Time: time.Now()},
 		},
 		Latitude:  54.351881,
 		Longitude: 18.646265,

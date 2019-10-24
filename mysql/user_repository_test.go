@@ -14,7 +14,7 @@ var (
 	johnDoe = &entity.User{
 		Base: entity.Base{
 			ID:        uuid.MustParse("80cc7eb0-c960-43af-9b90-e421ddca52e5"),
-			CreatedAt: time.Now(),
+			CreatedAt: entity.Time{Time: time.Now()},
 		},
 		Email:    "john.doe@example.com",
 		Username: "john.doe",
@@ -23,7 +23,7 @@ var (
 	mikeDoe = &entity.User{
 		Base: entity.Base{
 			ID:        uuid.MustParse("76823743-19b1-4efb-b2e8-d1af41f58f33"),
-			CreatedAt: time.Now(),
+			CreatedAt: entity.Time{Time: time.Now()},
 		},
 		Email:    "mike.doe@example.com",
 		Username: "mike.doe",
