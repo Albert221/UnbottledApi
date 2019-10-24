@@ -9,7 +9,7 @@ services:
     environment:
       PORT: 8080
       SECRET: "9ernewf0w34jnf0324nfwdssdofhn3240f24fs"
-      DB_DSN: "root:passw@mariadb/unbottled"
+      DB_DSN: "root:passw@tcp(mariadb)/unbottled"
     volumes:
       - uploads_vol:/app/uploads
     networks:
